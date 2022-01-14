@@ -7,8 +7,6 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { io } from "socket.io-client";
 import MouseMeshInteraction from "./three_mmi";
 
-const socket = io("localhost:1989");
-
 // SCENE
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xa8def0);
@@ -67,10 +65,25 @@ orbitControls.addEventListener("change", function () {
 orbitControls.update();
 
 // LIGHTS
-light();
+function light() {
+  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
 
-// FLOOR
-// generateFloor();
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+  dirLight.position.set(-60, 400, -10);
+  dirLight.castShadow = true;
+  dirLight.shadow.camera.top = 50;
+  dirLight.shadow.camera.bottom = -50;
+  dirLight.shadow.camera.left = -50;
+  dirLight.shadow.camera.right = 50;
+  dirLight.shadow.camera.near = 0.1;
+  dirLight.shadow.camera.far = 200;
+  dirLight.shadow.mapSize.width = 4096;
+  dirLight.shadow.mapSize.height = 4096;
+  scene.add(dirLight);
+  // scene.add( new THREE.CameraHelper(dirLight.shadow.camera))
+}
+
+light();
 
 // MODEL WITH ANIMATIONS
 var characterControls: CharacterControls;
@@ -175,40 +188,21 @@ function generateApe() {
   ape.position.z -= 2.85;
   ape.scale.set(0.6, 0.6, 0.6);
   ape.rotateY(-Math.PI / 2);
-  ape.name = "APE_TEST";
+  ape.name = "APE";
 
   scene.add(ape);
 }
 
-mmi.addHandler("APE_TEST", "click", function (mesh) {
+// TODO -- Fix event click handler
+mmi.addHandler("APE", "click", function (mesh) {
   console.log("interactable mesh has been clicked!");
   console.log(mesh);
-  alert("HELLO");
 });
 
-function generateApe2() {
-  const textureLoader = new THREE.TextureLoader();
-  const placeholder = textureLoader.load("./textures/BAYC2.png");
-
-  const width = 2;
-  const length = 2;
-
-  const geometry = new THREE.PlaneGeometry(width, length, 512, 512);
-  const material = new THREE.MeshPhongMaterial({ map: placeholder });
-
-  const ape = new THREE.Mesh(geometry, material);
-  ape.position.y += 2.5;
-  ape.position.x += 7.5;
-  ape.position.z += 4.85;
-  ape.scale.set(0.6, 0.6, 0.6);
-  ape.rotateY(-Math.PI / 2);
-
-  scene.add(ape);
-}
-
 generateApe();
-generateApe2();
 
+// WEBSOCKETS IMPLEMENTATION
+const socket = io("localhost:1989");
 let id;
 let clients = new Object();
 
@@ -295,52 +289,3 @@ socket.on("userPositions", (_clientProps) => {
     }
   }
 });
-
-// function generateFloor() {
-//   // TEXTURES
-//   const textureLoader = new THREE.TextureLoader();
-//   const placeholder = textureLoader.load(
-//     "./textures/placeholder/placeholder.png"
-//   );
-//   const sandBaseColor = textureLoader.load(
-//     "./textures/sand/Sand 002_COLOR.jpg"
-//   );
-//   const sandNormalMap = textureLoader.load("./textures/sand/Sand 002_NRM.jpg");
-//   const sandHeightMap = textureLoader.load("./textures/sand/Sand 002_DISP.jpg");
-//   const sandAmbientOcclusion = textureLoader.load(
-//     "./textures/sand/Sand 002_OCC.jpg"
-//   );
-
-//   const WIDTH = 4;
-//   const LENGTH = 4;
-//   const NUM_X = 15;
-//   const NUM_Z = 15;
-
-//   const geometry = new THREE.PlaneGeometry(WIDTH, LENGTH, 512, 512);
-//   const material = new THREE.MeshStandardMaterial({
-//     map: sandBaseColor,
-//     normalMap: sandNormalMap,
-//     displacementMap: sandHeightMap,
-//     displacementScale: 0.1,
-//     aoMap: sandAmbientOcclusion,
-//   });
-//   // const material = new THREE.MeshPhongMaterial({ map: placeholder})
-// }
-
-function light() {
-  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-
-  const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-  dirLight.position.set(-60, 400, -10);
-  dirLight.castShadow = true;
-  dirLight.shadow.camera.top = 50;
-  dirLight.shadow.camera.bottom = -50;
-  dirLight.shadow.camera.left = -50;
-  dirLight.shadow.camera.right = 50;
-  dirLight.shadow.camera.near = 0.1;
-  dirLight.shadow.camera.far = 200;
-  dirLight.shadow.mapSize.width = 4096;
-  dirLight.shadow.mapSize.height = 4096;
-  scene.add(dirLight);
-  // scene.add( new THREE.CameraHelper(dirLight.shadow.camera))
-}
